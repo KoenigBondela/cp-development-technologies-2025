@@ -1,7 +1,7 @@
-package punic;
+package punic.core;
 
 /**
- * Интерфейс воина
+ * Интерфейс воина.
  */
 public interface Warrior {
     void info();

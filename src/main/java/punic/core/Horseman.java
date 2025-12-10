@@ -1,7 +1,7 @@
-package punic;
+package punic.core;
 
 /**
- * Класс всадника
+ * Класс всадника.
  */
 public class Horseman implements Warrior {
     private int health;
@@ -32,7 +32,6 @@ public class Horseman implements Warrior {
         System.out.println("Боевая мощь: " + combatPower);
     }
 
-    // Геттеры и сеттеры
     public int getHealth() {
         return health;
     }

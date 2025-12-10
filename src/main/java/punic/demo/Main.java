@@ -1,19 +1,22 @@
-package punic;
+package punic.demo;
+
+import punic.builder.WarriorBuilder;
+import punic.core.Warrior;
 
 /**
- * Главный класс для демонстрации работы паттерна Builder
+ * Демонстрация порождающего паттерна Builder.
  */
 public class Main {
     public static void main(String[] args) {
         WarriorBuilder.buildStandardArcher().info();
         System.out.println();
-        
+
         WarriorBuilder.buildStandardInfantryman().info();
         System.out.println();
-        
+
         WarriorBuilder.buildStandardHorseman().info();
         System.out.println();
-        
+
         Warrior eliteArcher = new WarriorBuilder()
                 .setType("Archer")
                 .setAppearance("Улучшенная кожаная броня с металлическими вставками, усиленный лук")
@@ -24,7 +27,7 @@ public class Main {
                 .build();
         eliteArcher.info();
         System.out.println();
-        
+
         Warrior lightInfantryman = new WarriorBuilder()
                 .setType("Infantryman")
                 .setAppearance("Легкая броня, короткий меч")
@@ -35,7 +38,7 @@ public class Main {
                 .build();
         lightInfantryman.info();
         System.out.println();
-        
+
         Warrior heavyHorseman = new WarriorBuilder()
                 .setType("Horseman")
                 .setAppearance("Тяжелая броня, длинное копье, мощный конь")
@@ -47,3 +50,4 @@ public class Main {
         heavyHorseman.info();
     }
 }
+
