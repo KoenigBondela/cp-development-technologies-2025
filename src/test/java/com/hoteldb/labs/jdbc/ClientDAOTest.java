@@ -24,6 +24,7 @@ class ClientDAOTest {
 
     @BeforeEach
     void setUp() throws SQLException {
+        DatabaseConnection.resetForTests();
         dbConnection = DatabaseConnection.getInstance();
         clientDAO = new ClientDAO();
         roomDAO = new RoomDAO();
@@ -146,6 +147,75 @@ class ClientDAOTest {
     void testDeleteNotFound() throws SQLException {
         boolean deleted = clientDAO.delete(999);
         assertFalse(deleted);
+    }
+
+    @Test
+    void testCreateNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> clientDAO.create(null));
+    }
+
+    @Test
+    void testFindByIdNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> clientDAO.findById(null));
+    }
+
+    @Test
+    void testUpdateNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> clientDAO.update(null));
+    }
+
+    @Test
+    void testUpdateWithoutIdThrows() {
+        Client client = new Client("No", "Id", "no.id@example.com", "+000", null);
+        assertThrows(IllegalArgumentException.class, () -> clientDAO.update(client));
+    }
+
+    @Test
+    void testDeleteNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> clientDAO.delete(null));
+    }
+
+    @Test
+    void testUpdateNotFoundThrowsSQLException() {
+        Client client = new Client("Ghost", "User", "ghost.user@example.com", "+999", null);
+        client.setId(999);
+        assertThrows(SQLException.class, () -> clientDAO.update(client));
+    }
+
+    @Test
+    void testCreateWithoutGeneratedKeysThrowsSQLException() throws SQLException {
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS clients");
+            stmt.execute("CREATE TABLE clients (" +
+                    "id INT PRIMARY KEY, " +
+                    "first_name VARCHAR(100) NOT NULL, " +
+                    "last_name VARCHAR(100) NOT NULL, " +
+                    "email VARCHAR(255) UNIQUE, " +
+                    "phone VARCHAR(20), " +
+                    "room_id INT, " +
+                    "check_in_date DATE, " +
+                    "check_out_date DATE, " +
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+        }
+
+        Client client = new Client("Key", "Less", "key.less@example.com", "+111", null);
+        assertThrows(SQLException.class, () -> clientDAO.create(client));
+    }
+
+    @Test
+    void testMapResultSetToClientThrowsAndIsWrapped() throws SQLException {
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS clients");
+            stmt.execute("CREATE TABLE clients (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "last_name VARCHAR(100) NOT NULL" +
+                    ")");
+            stmt.execute("INSERT INTO clients (last_name) VALUES ('Doe')");
+        }
+
+        assertThrows(SQLException.class, () -> clientDAO.findAll());
     }
 }
 

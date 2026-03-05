@@ -22,6 +22,7 @@ class RoomDAOTest {
 
     @BeforeEach
     void setUp() throws SQLException {
+        DatabaseConnection.resetForTests();
         dbConnection = DatabaseConnection.getInstance();
         roomDAO = new RoomDAO();
         
@@ -117,6 +118,71 @@ class RoomDAOTest {
     void testDeleteNotFound() throws SQLException {
         boolean deleted = roomDAO.delete(999);
         assertFalse(deleted, "Should return false when room not found");
+    }
+
+    @Test
+    void testCreateNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> roomDAO.create(null));
+    }
+
+    @Test
+    void testFindByIdNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> roomDAO.findById(null));
+    }
+
+    @Test
+    void testUpdateNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> roomDAO.update(null));
+    }
+
+    @Test
+    void testUpdateWithoutIdThrows() {
+        Room room = new Room("999", "Standard", new BigDecimal("50.00"), true);
+        assertThrows(IllegalArgumentException.class, () -> roomDAO.update(room));
+    }
+
+    @Test
+    void testDeleteNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> roomDAO.delete(null));
+    }
+
+    @Test
+    void testUpdateNotFoundThrowsSQLException() {
+        Room room = new Room("X1", "Standard", new BigDecimal("50.00"), true);
+        room.setId(999);
+        assertThrows(SQLException.class, () -> roomDAO.update(room));
+    }
+
+    @Test
+    void testCreateWithoutGeneratedKeysThrowsSQLException() throws SQLException {
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS rooms");
+            stmt.execute("CREATE TABLE rooms (" +
+                    "id INT PRIMARY KEY, " +
+                    "room_number VARCHAR(10) NOT NULL UNIQUE, " +
+                    "room_type VARCHAR(50) NOT NULL, " +
+                    "price_per_night DECIMAL(10, 2) NOT NULL, " +
+                    "is_available BOOLEAN DEFAULT TRUE, " +
+                    "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+        }
+
+        Room room = new Room("K1", "Standard", new BigDecimal("50.00"), true);
+        assertThrows(SQLException.class, () -> roomDAO.create(room));
+    }
+
+    @Test
+    void testMapResultSetToRoomThrowsAndIsWrapped() throws SQLException {
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS rooms");
+            stmt.execute("CREATE TABLE rooms (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY" +
+                    ")");
+            stmt.execute("INSERT INTO rooms (id) VALUES (1)");
+        }
+
+        assertThrows(SQLException.class, () -> roomDAO.findAll());
     }
 }
 

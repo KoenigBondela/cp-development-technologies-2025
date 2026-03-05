@@ -17,7 +17,7 @@ class DatabaseConnectionTest {
 
     @BeforeEach
     void setUp() {
-        // Reset singleton for testing
+        DatabaseConnection.resetForTests();
         dbConnection = DatabaseConnection.getInstance();
     }
 
@@ -50,11 +50,9 @@ class DatabaseConnectionTest {
 
     @Test
     void testCloseConnection() throws SQLException {
-        dbConnection.getConnection();
+        Connection conn = dbConnection.getConnection();
         dbConnection.closeConnection();
-        // Connection should be closed
-        assertTrue(dbConnection.getConnection().isClosed() || 
-                   dbConnection.getConnection().isValid(1));
+        assertTrue(conn.isClosed(), "Connection should be closed");
     }
 
     @Test

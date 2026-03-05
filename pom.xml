@@ -36,6 +36,13 @@
             <version>${mysql.version}</version>
         </dependency>
 
+        <!-- PostgreSQL JDBC Driver (for backup DB / failover) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
+        </dependency>
+
         <!-- H2 Database for testing (in-memory) -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -164,6 +171,10 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
+                    <systemPropertyVariables>
+                        <!-- Force tests to use H2 config from test resources -->
+                        <db.properties.file>test-database.properties</db.properties.file>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
@@ -195,6 +206,18 @@
                             <rules>
                                 <rule>
                                     <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com.hoteldb.labs.jdbc</include>
+                                        <include>com.hoteldb.labs.jdbc.**</include>
+                                        <include>com.hoteldb.labs.jpa</include>
+                                        <include>com.hoteldb.labs.jpa.**</include>
+                                        <include>com.hoteldb.labs.model</include>
+                                        <include>com.hoteldb.labs.model.**</include>
+                                    </includes>
+                                    <excludes>
+                                        <!-- Main/CLI demo classes are not "нетривиальные функции" -->
+                                        <exclude>**/*Main*</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>

@@ -42,6 +42,7 @@ class ClientServiceTest {
         assertNotNull(created.getId(), "Client should have an ID after creation");
         assertEquals("John", created.getFirstName());
         assertEquals("Doe", created.getLastName());
+        assertNotNull(created.getCreatedAt(), "createdAt should be set by @PrePersist");
     }
 
     @Test
@@ -97,6 +98,25 @@ class ClientServiceTest {
         ClientEntity updated = clientService.update(client);
         assertEquals("Robert", updated.getFirstName());
         assertEquals("robert.wilson@example.com", updated.getEmail());
+    }
+
+    @Test
+    void testCreateDuplicateEmailTriggersRollback() {
+        clientService.create(new ClientEntity("A", "B", "dup@example.com", "+1", null));
+        assertThrows(Exception.class, () -> clientService.create(new ClientEntity("C", "D", "dup@example.com", "+2", null)));
+    }
+
+    @Test
+    void testUpdateDuplicateEmailTriggersRollback() {
+        ClientEntity c1 = clientService.create(new ClientEntity("A", "B", "dup2a@example.com", "+1", null));
+        ClientEntity c2 = clientService.create(new ClientEntity("C", "D", "dup2b@example.com", "+2", null));
+        c2.setEmail(c1.getEmail());
+        assertThrows(Exception.class, () -> clientService.update(c2));
+    }
+
+    @Test
+    void testDeleteNullIdTriggersRollback() {
+        assertThrows(Exception.class, () -> clientService.delete(null));
     }
 
     @Test

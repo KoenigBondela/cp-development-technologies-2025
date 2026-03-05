@@ -36,6 +36,7 @@ class RoomServiceTest {
         assertNotNull(created.getId(), "Room should have an ID after creation");
         assertEquals("101", created.getRoomNumber());
         assertEquals("Standard", created.getRoomType());
+        assertNotNull(created.getCreatedAt(), "createdAt should be set by @PrePersist");
     }
 
     @Test
@@ -78,6 +79,25 @@ class RoomServiceTest {
         assertEquals("Deluxe", updated.getRoomType());
         assertEquals(new BigDecimal("100.00"), updated.getPricePerNight());
         assertFalse(updated.getIsAvailable());
+    }
+
+    @Test
+    void testCreateDuplicateRoomNumberTriggersRollback() {
+        roomService.create(new RoomEntity("DUP-1", "Standard", new BigDecimal("10.00"), true));
+        assertThrows(Exception.class, () -> roomService.create(new RoomEntity("DUP-1", "Standard", new BigDecimal("11.00"), true)));
+    }
+
+    @Test
+    void testUpdateDuplicateRoomNumberTriggersRollback() {
+        RoomEntity r1 = roomService.create(new RoomEntity("DUP-2A", "Standard", new BigDecimal("10.00"), true));
+        RoomEntity r2 = roomService.create(new RoomEntity("DUP-2B", "Standard", new BigDecimal("10.00"), true));
+        r2.setRoomNumber(r1.getRoomNumber());
+        assertThrows(Exception.class, () -> roomService.update(r2));
+    }
+
+    @Test
+    void testDeleteNullIdTriggersRollback() {
+        assertThrows(Exception.class, () -> roomService.delete(null));
     }
 
     @Test
