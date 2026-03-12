@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -242,25 +244,40 @@ public class DatabaseConnection {
     }
 
     private static InputStream openFromClassPath(String resourceName) {
-        return DatabaseConnection.class.getClassLoader().getResourceAsStream(resourceName);
+        InputStream classpathStream = DatabaseConnection.class.getClassLoader().getResourceAsStream(resourceName);
+        if (classpathStream != null) {
+            return classpathStream;
+        }
+
+        // Fallback: allow running from a working directory that contains the properties file
+        try {
+            Path localPath = Path.of(resourceName);
+            if (Files.exists(localPath) && Files.isRegularFile(localPath)) {
+                return Files.newInputStream(localPath);
+            }
+        } catch (Exception ignored) {
+            // ignore and return null below
+        }
+
+        return null;
     }
 
     private static Properties loadProperties(ResourceProvider resourceProvider, String primaryFileName) {
         logger.debug("Загрузка настроек подключения к базе данных (файл: {})", primaryFileName);
         Properties props = new Properties();
 
-        InputStream inputStream = resourceProvider.open(primaryFileName);
-        if (inputStream == null && !FALLBACK_TEST_PROPERTIES_FILE.equals(primaryFileName)) {
+        InputStream streamToUse = resourceProvider.open(primaryFileName);
+        if (streamToUse == null && !FALLBACK_TEST_PROPERTIES_FILE.equals(primaryFileName)) {
             logger.warn("Файл {} не найден, попытка загрузить {}", primaryFileName, FALLBACK_TEST_PROPERTIES_FILE);
-            inputStream = resourceProvider.open(FALLBACK_TEST_PROPERTIES_FILE);
+            streamToUse = resourceProvider.open(FALLBACK_TEST_PROPERTIES_FILE);
         }
 
-        if (inputStream == null) {
+        if (streamToUse == null) {
             logger.error("Не найден файл с настройками базы данных ({} или {})", primaryFileName, FALLBACK_TEST_PROPERTIES_FILE);
             throw new RuntimeException("Не найден файл с настройками базы данных");
         }
 
-        try (inputStream) {
+        try (InputStream inputStream = streamToUse) {
             props.load(inputStream);
             logger.info("Настройки подключения успешно загружены. URL: {}", props.getProperty(KEY_URL));
             return props;
