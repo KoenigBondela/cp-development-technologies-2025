@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.hotel</groupId>
@@ -10,13 +9,14 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>Hotel Database Labs</name>
-    <description>Laboratory works: JDBC, JPA, Unit Testing</description>
+    <name>CP Development Technologies 2025</name>
+    <description>Labs (previous + current semester) in one build.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+
         <junit.version>5.10.1</junit.version>
         <hibernate.version>6.4.4.Final</hibernate.version>
         <mysql.version>8.3.0</mysql.version>
@@ -26,6 +26,8 @@
         <aspectj.version>1.9.22</aspectj.version>
         <slf4j.version>2.0.9</slf4j.version>
         <logback.version>1.4.14</logback.version>
+        <postgresql.version>42.7.3</postgresql.version>
+        <servlet.version>4.0.1</servlet.version>
     </properties>
 
     <dependencies>
@@ -33,7 +35,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
+            <version>${servlet.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -44,14 +46,14 @@
             <version>${mysql.version}</version>
         </dependency>
 
-        <!-- PostgreSQL JDBC Driver (for backup DB / failover) -->
+        <!-- PostgreSQL JDBC Driver (backup DB / failover) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.3</version>
+            <version>${postgresql.version}</version>
         </dependency>
 
-        <!-- H2 Database for testing (in-memory) -->
+        <!-- H2 Database for tests -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -73,116 +75,139 @@
             <version>${hibernate.version}</version>
         </dependency>
 
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Mockito for mocking -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Mockito JUnit Jupiter integration -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- AspectJ Runtime -->
+        <!-- AspectJ -->
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
             <version>${aspectj.version}</version>
         </dependency>
-
-        <!-- AspectJ Tools (for compilation) -->
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
             <version>${aspectj.version}</version>
         </dependency>
 
-        <!-- SLF4J API -->
+        <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-
-        <!-- Logback Classic (SLF4J implementation) -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
         </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
+        <!-- Use semester-current webapp as WAR root -->
+        <finalName>${project.artifactId}</finalName>
+
+        <resources>
+            <resource>
+                <directory>semester-current/src/main/resources</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>semester-current/src/test/resources</directory>
+            </testResource>
+        </testResources>
+
         <plugins>
-            <!-- AspectJ Maven Plugin for compiling AspectJ code -->
+            <!-- Add non-standard source folders (keep semester split, one build) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>semester-current/src/main/java</source>
+                                <source>semester-previous/src/main/java</source>
+                            </sources>
+                            <testSources>
+                                <testSource>semester-current/src/test/java</testSource>
+                            </testSources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- AspectJ compilation (needed for previous semester .aj) -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
                 <version>1.15.0</version>
                 <configuration>
-                    <complianceLevel>21</complianceLevel>
-                    <source>21</source>
-                    <target>21</target>
-                    <encoding>UTF-8</encoding>
+                    <complianceLevel>${maven.compiler.source}</complianceLevel>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <showWeaveInfo>true</showWeaveInfo>
-                    <verbose>true</verbose>
+                    <verbose>false</verbose>
                     <Xlint>ignore</Xlint>
-                    <XnoInline>false</XnoInline>
                     <forceAjcCompile>true</forceAjcCompile>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>compile</goal>
+                            <goal>test-compile</goal>
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.aspectj</groupId>
-                        <artifactId>aspectjtools</artifactId>
-                        <version>${aspectj.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.12.1</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                    <encoding>UTF-8</encoding>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
 
-            <!-- Build WAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <warSourceDirectory>semester-current/src/main/webapp</warSourceDirectory>
                 </configuration>
             </plugin>
 
-            <!-- Maven Surefire Plugin for running tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -190,13 +215,11 @@
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <systemPropertyVariables>
-                        <!-- Force tests to use H2 config from test resources -->
                         <db.properties.file>test-database.properties</db.properties.file>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo Maven Plugin for code coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -233,7 +256,6 @@
                                         <include>com.hoteldb.labs.model.**</include>
                                     </includes>
                                     <excludes>
-                                        <!-- Main/CLI demo classes are not "нетривиальные функции" -->
                                         <exclude>**/*Main*</exclude>
                                     </excludes>
                                     <limits>
@@ -250,7 +272,6 @@
                 </executions>
             </plugin>
 
-            <!-- Maven Exec Plugin for running main classes -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -259,7 +280,6 @@
                     <mainClass>com.hoteldb.labs.jdbc.Lab1Main</mainClass>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>

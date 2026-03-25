@@ -1,3 +1,159 @@
+# CP Development Technologies 2025 (Java)
+
+Этот репозиторий содержит лабораторные работы **прошлого** и **текущего** семестров, разнесённые по директориям, но собираемые **одним корневым `pom.xml`**.
+
+## Структура проекта (по семестрам)
+
+- **`semester-current/`** — текущий семестр: JDBC/JPA/WEB (JSP/Servlet), unit-тесты, failover/backup
+- **`semester-previous/`** — прошлый семестр: паттерны, AspectJ, антипаттерны
+
+Корневой `pom.xml` — **общий**: он подключает исходники из `semester-current/` и `semester-previous/` и собирает один `war`.
+
+## Быстрый старт (сборка)
+
+Собрать всё (оба семестра):
+
+```bash
+mvn clean test
+```
+
+Отдельной сборки “только текущий/только прошлый” сейчас нет — сборка общая (один `pom.xml`).
+
+Если нужно быстро прогнать только тесты из `semester-current`, можно так (запуск из корня):
+
+```bash
+mvn -Dtest=* test
+```
+
+> Если команда `mvn` не находится в системе — установите Maven или добавьте его в PATH.
+
+## Где какая лабораторная
+
+### Текущий семестр (`semester-current`)
+
+- **Лаб1 (повторение, БД по вариантам без AOP)**
+  - JDBC + DAO: `semester-current/src/main/java/com/hoteldb/labs/jdbc/`
+  - Конфиг БД (primary + backup): `semester-current/src/main/resources/database.properties`
+  - Скрипты инициализации:
+    - MySQL primary: `semester-current/src/main/resources/sql/init.sql`
+    - PostgreSQL backup: `semester-current/src/main/resources/sql/init-backup.sql`
+  - Unit-тесты: `semester-current/src/test/java/` (JaCoCo настроен на 100% покрытие нетривиального кода)
+
+- **Лаб2 (JPA)**
+  - JPA сущности/сервисы: `semester-current/src/main/java/com/hoteldb/labs/jpa/`
+  - `persistence.xml`: `semester-current/src/main/resources/META-INF/persistence.xml`
+
+- **Лаб3 (JSP/Servlet 1)**
+  - Логин по таблице `users` (username+password) → переход на `welcome.jsp`: `semester-current/src/main/java/com/hoteldb/labs/web/LoginServlet.java`
+  - Регистрация в `users`: `semester-current/src/main/java/com/hoteldb/labs/web/RegisterServlet.java`
+  - JSP страницы: `semester-current/src/main/webapp/`
+  - “Красивое” оформление: Bootstrap подключён в JSP
+
+- **Лаб4 (JSP/Servlet 2)**
+  - Роли `USER`/`ADMIN`: `semester-current/src/main/java/com/hoteldb/labs/jpa/entity/UserRole.java`
+  - Разные таблицы для ролей (через JPA):
+    - ADMIN видит `rooms`
+    - USER видит `clients`
+  - Реализация: `semester-current/src/main/java/com/hoteldb/labs/web/WelcomeServlet.java` + `semester-current/src/main/webapp/welcome.jsp`
+
+### Прошлый семестр (`semester-previous`)
+
+- Паттерны/AspectJ/антипаттерны: `semester-previous/src/main/java/`
+  - паттерны `punic/*`, `com/hoteldb/labs/pattern*`
+  - AspectJ: `com/hoteldb/labs/aspectj`, `com/hoteldb/labs/pattern9/aspects`
+  - антипаттерны: `com/hoteldb/labs/antipatterns`
+
+## Настройка БД (для текущего семестра)
+
+### MySQL (primary)
+
+1) Создайте БД:
+
+```sql
+CREATE DATABASE hotel_db;
+```
+
+2) Примените скрипт `semester-current/src/main/resources/sql/init.sql` (любой удобный способ: MySQL Workbench / консоль).
+
+3) Проверьте `semester-current/src/main/resources/database.properties`:
+
+- `db.url`, `db.username`, `db.password`, `db.driver`
+
+### PostgreSQL (backup для Лаб1)
+
+1) Создайте backup БД и примените `semester-current/src/main/resources/sql/init-backup.sql`.
+
+2) Проверьте `semester-current/src/main/resources/database.properties`:
+
+- `db.backup.url`, `db.backup.username`, `db.backup.password`, `db.backup.driver`
+
+## Запуск лабораторных (CLI)
+
+Все команды ниже запускайте **из корня репозитория**.
+
+### Лаб1: JDBC (основная БД + failover)
+
+```bash
+mvn -Dexec.mainClass="com.hoteldb.labs.jdbc.Lab1Main" exec:java
+```
+
+### Лаб1: резервная копия primary → backup (другая СУБД)
+
+```bash
+mvn -Dexec.mainClass="com.hoteldb.labs.jdbc.Lab1BackupMain" exec:java
+```
+
+### Лаб2: JPA (вывод “универсального отношения”)
+
+```bash
+mvn -Dexec.mainClass="com.hoteldb.labs.jpa.Lab2Main" exec:java
+```
+
+## Запуск WEB (Лаб3/Лаб4)
+
+Проект собирается как **`war`**. Дальше его нужно задеплоить в сервлет-контейнер (например, Tomcat).
+
+1) Собрать WAR:
+
+```bash
+mvn clean package
+```
+
+2) Взять файл:
+
+- `target/hotel-db-labs.war`
+
+3) Положить в `webapps/` Tomcat и открыть (если war назовёте `hotel-db-labs.war`):
+
+- `http://localhost:8080/hotel-db-labs/`
+
+### Учётки по умолчанию (из init.sql/init-backup.sql)
+
+- `admin / admin` (роль ADMIN)
+- `user / user` (роль USER)
+
+## Тесты и покрытие
+
+Запуск тестов для текущего семестра:
+
+```bash
+mvn test
+```
+
+Отчёт JaCoCo:
+
+```bash
+mvn jacoco:report
+```
+
+HTML-отчёт:
+
+- `semester-current/target/site/jacoco/index.html`
+
+Примечание: так как сборка общая, отчёт JaCoCo лежит в:
+
+- `target/site/jacoco/index.html`
+
 # Проект: Разработка технологий программирования
 
 ## Описание проекта
@@ -29,6 +185,23 @@
 
 ---
 
+## Структура по семестрам
+
+Проект теперь **разделён на 2 директории по семестрам**:
+
+- `semester-current/` — лабораторные текущего семестра (JDBC/JPA/WEB + тесты)
+- `semester-previous/` — лабораторные прошлого семестра (паттерны/AspectJ/антипаттерны)
+
+Собирать всё сразу:
+
+```bash
+mvn clean test
+```
+
+Сборка выполняется одним корневым `pom.xml` (один `war`), поэтому отдельно по директориям не собираем.
+
+---
+
 ## Настройка проекта
 
 ### 1. Настройка базы данных MySQL
@@ -38,7 +211,7 @@
 CREATE DATABASE hotel_db;
 ```
 
-Настройте подключение в `src/main/resources/database.properties`:
+Настройте подключение в `semester-current/src/main/resources/database.properties`:
 ```properties
 db.url=jdbc:mysql://localhost:3306/hotel_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 db.username=root
@@ -648,41 +821,27 @@ mvn clean test jacoco:check
 ## Общая структура проекта
 
 ```
-src/
-├── main/
-│   ├── java/
-│   │   ├── com/hoteldb/labs/
-│   │   │   ├── jdbc/              # Лабораторная работа №1, №8
-│   │   │   ├── jpa/               # Лабораторная работа №2
-│   │   │   ├── model/             # Модели данных
-│   │   │   ├── aspectj/           # Лабораторная работа №7
-│   │   │   ├── pattern4/          # Лабораторная работа №4
-│   │   │   │   └── creational/
-│   │   │   ├── pattern5/          # Лабораторная работа №5
-│   │   │   │   └── structural/
-│   │   │   ├── pattern6/          # Лабораторная работа №6
-│   │   │   │   └── behavioral/
-│   │   │   └── pattern9/           # Лабораторная работа №9
-│   │   │       └── aspects/
-│   │   └── punic/
-│   │       ├── core/              # Базовые классы
-│   │       ├── builder/           # Паттерн Builder
-│   │       ├── bridge/            # Паттерн Bridge
-│   │       ├── iterator/          # Паттерн Iterator
-│   │       └── demo/              # Демонстрационные классы
-│   └── resources/
-│       ├── database.properties    # Конфигурация БД
-│       ├── logback.xml            # Конфигурация логирования
-│       ├── META-INF/
-│       │   └── persistence.xml    # Конфигурация JPA
-│       └── sql/
-│           └── init.sql           # SQL скрипт инициализации
-└── test/
-    ├── java/                      # Лабораторная работа №10
-    └── resources/
-        ├── test-database.properties
-        └── META-INF/
-            └── persistence.xml
+semester-current/
+├── src/
+│   ├── main/
+│   │   ├── java/com/hoteldb/labs/
+│   │   │   ├── jdbc/              # Лабораторная работа №1 (+ backup/failover)
+│   │   │   ├── jpa/               # JPA сущности/сервисы
+│   │   │   ├── model/             # Модели
+│   │   │   └── web/               # JSP/Servlet (Лаб3/Лаб4)
+│   │   ├── resources/
+│   │   │   ├── database.properties
+│   │   │   ├── META-INF/persistence.xml
+│   │   │   └── sql/               # init.sql, init-backup.sql
+│   │   └── webapp/                # JSP страницы
+│   └── test/
+│       ├── java/                  # Unit-тесты (JaCoCo 100% для нетривиального кода)
+│       └── resources/
+└── pom.xml
+
+semester-previous/
+├── src/main/java/                 # Паттерны, AspectJ, антипаттерны
+└── pom.xml
 ```
 
 ---

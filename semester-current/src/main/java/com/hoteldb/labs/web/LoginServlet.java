@@ -1,6 +1,7 @@
 package com.hoteldb.labs.web;
 
-import com.hoteldb.labs.jdbc.DatabaseConnection;
+import com.hoteldb.labs.jpa.entity.UserEntity;
+import com.hoteldb.labs.jpa.service.UserService;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,9 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.Optional;
 
 @WebServlet(name = "LoginServlet", urlPatterns = "/Login")
 public class LoginServlet extends HttpServlet {
@@ -23,36 +22,33 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        String email = trimToNull(request.getParameter("email"));
-        String lastName = trimToNull(request.getParameter("lastName"));
+        String username = trimToNull(request.getParameter("username"));
+        String password = trimToNull(request.getParameter("password"));
 
-        if (email == null || lastName == null) {
+        if (username == null || password == null) {
             response.sendRedirect("index.jsp?error=missing");
             return;
         }
 
-        try (Connection conn = DatabaseConnection.getInstance().openPrimaryConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT id, first_name, last_name FROM clients WHERE email = ? AND last_name = ?"
-             )) {
-            ps.setString(1, email);
-            ps.setString(2, lastName);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    response.sendRedirect("index.jsp?error=invalid");
-                    return;
-                }
-
-                String firstName = rs.getString("first_name");
-                HttpSession session = request.getSession(true);
-                session.setAttribute("userEmail", email);
-                session.setAttribute("userName", firstName + " " + lastName);
-                response.sendRedirect("welcome.jsp");
+        UserService userService = new UserService();
+        try {
+            Optional<UserEntity> userOpt = userService.findByUsernameAndPassword(username, password);
+            if (userOpt.isEmpty()) {
+                response.sendRedirect("index.jsp?error=invalid");
+                return;
             }
+
+            UserEntity user = userOpt.get();
+            HttpSession session = request.getSession(true);
+            session.setAttribute("userName", user.getUsername());
+            session.setAttribute("userRole", user.getRole().name());
+
+            response.sendRedirect("welcome");
         } catch (Exception e) {
             logger.error("Login failed: {}", e.getMessage(), e);
             response.sendRedirect("index.jsp?error=server");
+        } finally {
+            userService.close();
         }
     }
 

@@ -10,6 +10,7 @@
         
         <class>com.hoteldb.labs.jpa.entity.RoomEntity</class>
         <class>com.hoteldb.labs.jpa.entity.ClientEntity</class>
+        <class>com.hoteldb.labs.jpa.entity.UserEntity</class>
         
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
