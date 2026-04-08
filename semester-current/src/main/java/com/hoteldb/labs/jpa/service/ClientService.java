@@ -1,9 +1,9 @@
 package com.hoteldb.labs.jpa.service;
 
 import com.hoteldb.labs.jpa.entity.ClientEntity;
+import com.hoteldb.labs.jpa.JpaFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public class ClientService {
     }
 
     public ClientService(String persistenceUnitName) {
-        emf = Persistence.createEntityManagerFactory(persistenceUnitName);
+        emf = JpaFactory.createEntityManagerFactory(persistenceUnitName);
         em = emf.createEntityManager();
     }
 

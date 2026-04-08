@@ -1,7 +1,8 @@
 package com.hoteldb.labs.web;
 
-import com.hoteldb.labs.jpa.service.ClientService;
+import com.hoteldb.labs.jpa.entity.UserEntity;
 import com.hoteldb.labs.jpa.service.RoomService;
+import com.hoteldb.labs.jpa.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Optional;
 
 @WebServlet(name = "WelcomeServlet", urlPatterns = "/welcome")
 public class WelcomeServlet extends HttpServlet {
@@ -25,6 +27,7 @@ public class WelcomeServlet extends HttpServlet {
             return;
         }
 
+        String username = (String) session.getAttribute("userName");
         String role = (String) session.getAttribute("userRole");
         if (role == null || role.isBlank()) {
             role = "USER";
@@ -42,14 +45,20 @@ public class WelcomeServlet extends HttpServlet {
                 roomService.close();
             }
         } else {
-            ClientService clientService = new ClientService();
+            // Lab requirement: user sees a different table. We show only the current user's row from `users`.
+            UserService userService = new UserService();
             try {
-                request.setAttribute("clients", clientService.findAll());
+                Optional<UserEntity> me = userService.findByUsername(username);
+                if (me.isPresent()) {
+                    request.setAttribute("me", me.get());
+                } else {
+                    request.setAttribute("dataError", "users");
+                }
             } catch (Exception e) {
-                logger.error("Failed to load clients: {}", e.getMessage(), e);
-                request.setAttribute("dataError", "clients");
+                logger.error("Failed to load current user: {}", e.getMessage(), e);
+                request.setAttribute("dataError", "users");
             } finally {
-                clientService.close();
+                userService.close();
             }
         }
 

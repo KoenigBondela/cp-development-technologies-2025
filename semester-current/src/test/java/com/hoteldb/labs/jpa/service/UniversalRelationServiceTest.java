@@ -41,7 +41,7 @@ class UniversalRelationServiceTest {
         List<Object[]> rows = relationService.getUniversalRelation();
         assertNotNull(rows);
         assertTrue(rows.size() >= 1);
-        assertNotNull(rows.getFirst());
+        assertNotNull(rows.get(0));
     }
 
     @Test

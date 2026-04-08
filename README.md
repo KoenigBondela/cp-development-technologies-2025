@@ -6,8 +6,9 @@
 
 - **`semester-current/`** — текущий семестр: JDBC/JPA/WEB (JSP/Servlet), unit-тесты, failover/backup
 - **`semester-previous/`** — прошлый семестр: паттерны, AspectJ, антипаттерны
+- **`spring-app/`** — **Лаб5 + Лаб6**: отдельное **Spring Boot** приложение (тот же функционал, что Лаб4, + REST API). Собирается **своим** `spring-app/pom.xml`.
 
-Корневой `pom.xml` — **общий**: он подключает исходники из `semester-current/` и `semester-previous/` и собирает один `war`.
+Корневой `pom.xml` в корне репозитория — **общий** для servlet-части: он подключает исходники из `semester-current/` и `semester-previous/` и собирает один `war`. Spring-приложение в корень не включён (чтобы не смешивать два стека в одной сборке).
 
 ## Быстрый старт (сборка)
 
@@ -19,10 +20,12 @@ mvn clean test
 
 Отдельной сборки “только текущий/только прошлый” сейчас нет — сборка общая (один `pom.xml`).
 
-Если нужно быстро прогнать только тесты из `semester-current`, можно так (запуск из корня):
+> Проект собирается на **JDK 21+**, но `source/target` выставлены в **17** из-за ограничений AspectJ (ajc).
+
+Если нужно собрать AspectJ-часть (прошлый семестр, файлы `*.aj`), используйте профиль:
 
 ```bash
-mvn -Dtest=* test
+mvn -Paspectj clean compile
 ```
 
 > Если команда `mvn` не находится в системе — установите Maven или добавьте его в PATH.
@@ -53,8 +56,19 @@ mvn -Dtest=* test
   - Роли `USER`/`ADMIN`: `semester-current/src/main/java/com/hoteldb/labs/jpa/entity/UserRole.java`
   - Разные таблицы для ролей (через JPA):
     - ADMIN видит `rooms`
-    - USER видит `clients`
+    - USER видит **только свою строку** в `users`
   - Реализация: `semester-current/src/main/java/com/hoteldb/labs/web/WelcomeServlet.java` + `semester-current/src/main/webapp/welcome.jsp`
+
+- **Лаб5 (Spring)** — каталог `spring-app/`
+  - Spring Boot 3, Thymeleaf, Spring Security, Spring Data JPA
+  - Логин / регистрация / welcome: тот же смысл, что Лаб4 (роли, таблицы `rooms` / своя запись `users`)
+  - Порт по умолчанию: **8081** (чтобы не конфликтовать с Tomcat на 8080)
+  - Настройки БД: `spring-app/src/main/resources/application.properties`
+
+- **Лаб6 (REST API)** — тот же модуль `spring-app/`
+  - `GET /api/v1/me` — текущий пользователь (JSON), нужна аутентификация (**HTTP Basic**)
+  - `GET /api/v1/rooms` — список номеров (JSON), только **ADMIN**
+  - `POST /api/v1/register` — регистрация (JSON), без авторизации
 
 ### Прошлый семестр (`semester-previous`)
 
@@ -121,9 +135,9 @@ mvn clean package
 
 2) Взять файл:
 
-- `target/hotel-db-labs.war`
+- `target/hotel-db-labs-1.0-SNAPSHOT.war`
 
-3) Положить в `webapps/` Tomcat и открыть (если war назовёте `hotel-db-labs.war`):
+3) Положить в `webapps/` Tomcat и открыть (если war назовёте `hotel-db-labs-1.0-SNAPSHOT.war`):
 
 - `http://localhost:8080/hotel-db-labs/`
 
@@ -131,6 +145,48 @@ mvn clean package
 
 - `admin / admin` (роль ADMIN)
 - `user / user` (роль USER)
+
+## Запуск Лаб5 / Лаб6 (Spring Boot + REST)
+
+Из каталога `spring-app/`:
+
+```bash
+cd spring-app
+mvn spring-boot:run
+```
+
+Браузер: `http://localhost:8081/` (логин, регистрация, welcome).
+
+Если админа ещё нет в БД, при старте создаётся **`admin` / `admin`** (см. `AdminUserBootstrap`).
+
+### REST (Лаб6), примеры
+
+Регистрация (без авторизации):
+
+```bash
+curl -s -X POST http://localhost:8081/api/v1/register ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"apiuser\",\"password\":\"secret\"}"
+```
+
+Текущий пользователь (HTTP Basic):
+
+```bash
+curl -s -u admin:admin http://localhost:8081/api/v1/me
+```
+
+Список номеров (только ADMIN):
+
+```bash
+curl -s -u admin:admin http://localhost:8081/api/v1/rooms
+```
+
+Тесты модуля `spring-app`:
+
+```bash
+cd spring-app
+mvn test
+```
 
 ## Тесты и покрытие
 

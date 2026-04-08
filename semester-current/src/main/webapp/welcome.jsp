@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.hoteldb.labs.jpa.entity.RoomEntity" %>
-<%@ page import="com.hoteldb.labs.jpa.entity.ClientEntity" %>
+<%@ page import="com.hoteldb.labs.jpa.entity.UserEntity" %>
 <%
     String userName = (String) session.getAttribute("userName");
     String userRole = (String) session.getAttribute("userRole");
@@ -66,35 +66,34 @@
             </table>
         </div>
     <% } else { %>
-        <h2 class="h5 mt-4">Clients (user view)</h2>
+        <h2 class="h5 mt-4">Your account (user view)</h2>
         <%
-            List<ClientEntity> clients = (List<ClientEntity>) request.getAttribute("clients");
-            if (clients == null) clients = List.of();
+            UserEntity me = (UserEntity) request.getAttribute("me");
         %>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>ID</th>
-                    <th>First name</th>
-                    <th>Last name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                </tr>
-                </thead>
-                <tbody>
-                <% for (ClientEntity c : clients) { %>
+        <% if (me == null) { %>
+            <div class="alert alert-warning">Could not load your user record from DB.</div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered align-middle">
+                    <thead class="table-light">
                     <tr>
-                        <td><%= c.getId() %></td>
-                        <td><%= c.getFirstName() %></td>
-                        <td><%= c.getLastName() %></td>
-                        <td><%= c.getEmail() %></td>
-                        <td><%= c.getPhone() %></td>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Created</th>
                     </tr>
-                <% } %>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><%= me.getId() %></td>
+                        <td><%= me.getUsername() %></td>
+                        <td><%= me.getRole() %></td>
+                        <td><%= me.getCreatedAt() %></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
     <% } %>
 </div>
 </body>

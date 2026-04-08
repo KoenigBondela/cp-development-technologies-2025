@@ -2,9 +2,9 @@ package com.hoteldb.labs.jpa.service;
 
 import com.hoteldb.labs.jpa.entity.UserEntity;
 import com.hoteldb.labs.jpa.entity.UserRole;
+import com.hoteldb.labs.jpa.JpaFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class UserService {
     }
 
     public UserService(String persistenceUnitName) {
-        emf = Persistence.createEntityManagerFactory(persistenceUnitName);
+        emf = JpaFactory.createEntityManagerFactory(persistenceUnitName);
         em = emf.createEntityManager();
     }
 
@@ -61,7 +61,26 @@ public class UserService {
         q.setParameter("password", password);
 
         List<UserEntity> users = q.setMaxResults(1).getResultList();
-        return users.isEmpty() ? Optional.empty() : Optional.of(users.getFirst());
+        return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
+    }
+
+    public Optional<UserEntity> findByUsername(String username) {
+        if (username == null) {
+            return Optional.empty();
+        }
+        String u = username.trim();
+        if (u.isEmpty()) {
+            return Optional.empty();
+        }
+
+        TypedQuery<UserEntity> q = em.createQuery(
+                "SELECT u FROM UserEntity u WHERE u.username = :username",
+                UserEntity.class
+        );
+        q.setParameter("username", u);
+
+        List<UserEntity> users = q.setMaxResults(1).getResultList();
+        return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 
     public void close() {
