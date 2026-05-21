@@ -1,8 +1,7 @@
--- Create database
+-- Инициализация БД при первом запуске контейнера MySQL (Лаб9 Docker)
 CREATE DATABASE IF NOT EXISTS hotel_db;
 USE hotel_db;
 
--- Create rooms table
 CREATE TABLE IF NOT EXISTS rooms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_number VARCHAR(10) NOT NULL UNIQUE,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create clients table
 CREATE TABLE IF NOT EXISTS clients (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
@@ -26,7 +24,6 @@ CREATE TABLE IF NOT EXISTS clients (
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
 );
 
--- Create users table (for Lab3/Lab4 auth)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -36,7 +33,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample data
 INSERT INTO rooms (room_number, room_type, price_per_night, is_available) VALUES
 ('101', 'Standard', 50.00, TRUE),
 ('102', 'Standard', 50.00, FALSE),
@@ -66,4 +62,3 @@ INSERT INTO clients (first_name, last_name, email, phone, room_id, check_in_date
 INSERT INTO users (username, password, role) VALUES
 ('admin', 'admin', 'ADMIN'),
 ('user', 'user', 'USER');
-

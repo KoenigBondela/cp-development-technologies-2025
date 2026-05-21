@@ -37,7 +37,7 @@ public class PageController {
             @RequestParam String password,
             Model model) {
         try {
-            userAccountService.registerUser(username, password);
+            userAccountService.register(username, password);
             return "redirect:/login?registered";
         } catch (IllegalStateException e) {
             model.addAttribute("error", "duplicate");

@@ -24,7 +24,7 @@ public class RegisterRestController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            var saved = userAccountService.registerUser(request.username(), request.password());
+            var saved = userAccountService.register(request.username(), request.password());
             return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(saved));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();

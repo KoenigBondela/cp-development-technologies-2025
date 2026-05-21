@@ -1,9 +1,8 @@
 package com.hoteldb.spring.web;
 
-import com.hoteldb.spring.service.RoomQueryService;
-import com.hoteldb.spring.service.UserAccountService;
+import com.hoteldb.spring.service.UserManagementService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,27 +10,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WelcomeController {
 
-    private final RoomQueryService roomQueryService;
-    private final UserAccountService userAccountService;
+    private final UserManagementService userManagementService;
 
-    public WelcomeController(RoomQueryService roomQueryService, UserAccountService userAccountService) {
-        this.roomQueryService = roomQueryService;
-        this.userAccountService = userAccountService;
+    public WelcomeController(UserManagementService userManagementService) {
+        this.userManagementService = userManagementService;
     }
 
     @GetMapping("/welcome")
-    public String welcome(Model model, Authentication authentication) {
+    public String welcome(Authentication authentication) {
         if (authentication == null) {
             return "redirect:/login";
         }
         boolean admin = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         if (admin) {
-            model.addAttribute("rooms", roomQueryService.findAll());
-        } else {
-            model.addAttribute("me", userAccountService.requireByUsername(authentication.getName()));
+            return "redirect:/admin";
         }
-        return "welcome";
+        return "redirect:/welcome/user";
+    }
+
+    @GetMapping("/welcome/user")
+    @PreAuthorize("hasRole('USER')")
+    public String welcomeUser(Model model, Authentication authentication) {
+        model.addAttribute("me", userManagementService.requireActiveByUsername(authentication.getName()));
+        return "welcome-user";
     }
 }

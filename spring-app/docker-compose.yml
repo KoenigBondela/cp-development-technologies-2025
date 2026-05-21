@@ -1,0 +1,40 @@
+# Лаб9: приложение (Лаб8) + MySQL. Запуск: docker compose up --build
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: spring-labs-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-hotel_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hotel_db}
+    ports:
+      # 3307 на хосте — чтобы не конфликтовать с локальным MySQL на 3306
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: spring-labs-app
+    ports:
+      - "${APP_HOST_PORT:-8081}:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hotel_db}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-hotel_pass}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure:3
+
+volumes:
+  mysql_data:

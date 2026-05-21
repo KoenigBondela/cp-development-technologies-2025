@@ -22,6 +22,9 @@ public class UserEntity {
     @Column(nullable = false, length = 16)
     private UserRole role;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -63,6 +66,14 @@ public class UserEntity {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public LocalDateTime getCreatedAt() {

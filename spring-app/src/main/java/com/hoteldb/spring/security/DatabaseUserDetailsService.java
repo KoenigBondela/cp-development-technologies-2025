@@ -19,11 +19,13 @@ public class DatabaseUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity u = userRepository.findByUsername(username.trim())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        UserEntity u = userRepository.findByUsernameAndDeletedFalse(username.trim())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found or deleted: " + username));
+
         return User.withUsername(u.getUsername())
                 .password(u.getPassword())
                 .roles(u.getRole().name())
+                .disabled(u.isDeleted())
                 .build();
     }
 }

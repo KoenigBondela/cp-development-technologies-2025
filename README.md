@@ -6,9 +6,36 @@
 
 - **`semester-current/`** — текущий семестр: JDBC/JPA/WEB (JSP/Servlet), unit-тесты, failover/backup
 - **`semester-previous/`** — прошлый семестр: паттерны, AspectJ, антипаттерны
-- **`spring-app/`** — **Лаб5 + Лаб6**: отдельное **Spring Boot** приложение (тот же функционал, что Лаб4, + REST API). Собирается **своим** `spring-app/pom.xml`.
+- **`spring-app/`** — **Лаб5–Лаб9**: отдельное **Spring Boot** приложение (Лаб4+REST, Security, CRUD, Docker). Собирается **своим** `spring-app/pom.xml`.
 
 Корневой `pom.xml` в корне репозитория — **общий** для servlet-части: он подключает исходники из `semester-current/` и `semester-previous/` и собирает один `war`. Spring-приложение в корень не включён (чтобы не смешивать два стека в одной сборке).
+
+### Сводная таблица (текущий семестр)
+
+| Лаб | Тема | Где в репозитории | Запуск |
+|-----|------|-------------------|--------|
+| 1 | JDBC, DAO, failover/backup | `semester-current/.../jdbc/` | `mvn` + `Lab1Main` |
+| 2 | JPA, универсальное отношение | `semester-current/.../jpa/` | `mvn` + `Lab2Main` |
+| 3 | JSP/Servlet: логин, регистрация | `semester-current/.../web/`, `webapp/` | Tomcat, WAR |
+| 4 | JSP/Servlet: роли, разные таблицы | `WelcomeServlet`, `welcome.jsp` | Tomcat, WAR |
+| 5 | Spring Boot (аналог Лаб4) | `spring-app/` | IDEA / `mvn spring-boot:run` |
+| 6 | REST API поверх Лаб5 | `spring-app/.../api/` | HTTP Basic, порт 8081 |
+| 7 | Spring Security | `SecurityConfig`, `DatabaseUserDetailsService` | то же приложение |
+| 8 | Bootstrap + CRUD | `spring-app/.../admin/`, шаблоны Thymeleaf | `/admin/rooms`, `/admin/users` |
+| 9 | Docker (app + MySQL) | `Dockerfile`, `docker-compose.yml` | `docker compose up --build` |
+
+> **Важно:** ниже, начиная с раздела «Проект: Разработка технологий программирования», подробно описаны лабораторные **прошлого семестра** (паттерны, AspectJ). Там другая нумерация (Лаб4 = Builder, Лаб7 = AspectJ и т.д.) — не путать с таблицей выше.
+
+## Содержание (текущий семестр)
+
+1. [Структура и сборка](#структура-проекта-по-семестрам)
+2. [Где какая лабораторная](#где-какая-лабораторная)
+3. [Настройка БД](#настройка-бд-для-текущего-семестра)
+4. [Запуск Лаб1–2 (CLI)](#запуск-лабораторных-cli)
+5. [Запуск Лаб3–4 (Tomcat)](#запуск-web-лаб34)
+6. [Запуск Лаб5-9 (Spring)](#запуск-spring-лаб5-9)
+7. [Тесты и JaCoCo](#тесты-и-покрытие)
+8. [Прошлый семестр (паттерны, AspectJ)](#проект-разработка-технологий-программирования)
 
 ## Быстрый старт (сборка)
 
@@ -59,16 +86,50 @@ mvn -Paspectj clean compile
     - USER видит **только свою строку** в `users`
   - Реализация: `semester-current/src/main/java/com/hoteldb/labs/web/WelcomeServlet.java` + `semester-current/src/main/webapp/welcome.jsp`
 
-- **Лаб5 (Spring)** — каталог `spring-app/`
-  - Spring Boot 3, Thymeleaf, Spring Security, Spring Data JPA
-  - Логин / регистрация / welcome: тот же смысл, что Лаб4 (роли, таблицы `rooms` / своя запись `users`)
-  - Порт по умолчанию: **8081** (чтобы не конфликтовать с Tomcat на 8080)
-  - Настройки БД: `spring-app/src/main/resources/application.properties`
+#### Spring Boot (`spring-app/`) — Лаб5–Лаб9
 
-- **Лаб6 (REST API)** — тот же модуль `spring-app/`
-  - `GET /api/v1/me` — текущий пользователь (JSON), нужна аутентификация (**HTTP Basic**)
-  - `GET /api/v1/rooms` — список номеров (JSON), только **ADMIN**
-  - `POST /api/v1/register` — регистрация (JSON), без авторизации
+Общее для модуля:
+
+- **Spring Boot 3.2**, Java **17**, порт **8081** (Tomcat для servlet-лаб остаётся на **8080**)
+- Та же БД **`hotel_db`**, таблицы `users`, `rooms` (скрипт `semester-current/.../sql/init.sql`)
+- Точка входа: `com.hoteldb.spring.SpringLabsApplication`
+- Локальные настройки: `spring-app/src/main/resources/application.properties`
+- При старте: `UsersDeletedColumnMigration` (добавляет `users.deleted`, если колонки нет), `AdminUserBootstrap` (создаёт `admin/admin`, если нет)
+
+- **Лаб5 (Spring — веб, аналог Лаб4)**
+  - Thymeleaf: `/login`, `/register`, редирект после входа на `/welcome`
+  - Роли: ADMIN → панель `/admin`; USER → `/welcome/user` (своя строка в `users`)
+  - Ключевые классы: `PageController`, `WelcomeController`, `UserAccountService`
+
+- **Лаб6 (REST API)**
+  - Отдельная цепочка Security для `/api/**` (HTTP Basic, stateless, CSRF выкл.)
+  - `POST /api/v1/register` — регистрация (без авторизации)
+  - `GET /api/v1/me` — текущий пользователь (JSON)
+  - `GET /api/v1/rooms` — номера (только **ADMIN**)
+  - Контроллеры: `RegisterRestController`, `CurrentUserRestController`, `RoomRestController`
+
+- **Лаб7 (Spring Security)**
+  - `SecurityConfig`: `DaoAuthenticationProvider`, `@EnableMethodSecurity`
+  - Веб: form-login; `/admin/**` → **ADMIN**; `/profile/**` → **USER**
+  - `DatabaseUserDetailsService`: вход только для `deleted = false`
+  - Пароли: `LabPasswordEncoder` (plain text, совместимо с servlet-БД)
+
+- **Лаб8 (Bootstrap + CRUD)**
+  - Оформление: Bootstrap 5 в `templates/fragments/layout.html`
+  - ADMIN: CRUD номеров `/admin/rooms` (физическое удаление из БД допустимо)
+  - ADMIN: CRUD пользователей `/admin/users`; **удаление** = `users.deleted = 1` (строка скрывается, `DELETE` из MySQL запрещён)
+  - USER: редактирование своего пароля `/profile/edit`
+  - Кнопки «Редактировать» / «Удалить» **в строке таблицы**; при создании **id не вводится**
+  - Сервисы: `RoomManagementService`, `UserManagementService`
+
+- **Лаб9 (Docker)**
+  - `spring-app/Dockerfile` — сборка JAR внутри образа (Maven + JRE 17)
+  - `spring-app/docker-compose.yml` — сервисы **mysql** + **app**
+  - Профиль `docker`: `application-docker.properties` (хост БД `mysql`)
+  - MySQL готовится до старта Spring: `healthcheck` + `depends_on: condition: service_healthy`
+  - Порты: приложение **8081**, MySQL с хоста **3307**
+  - Инициализация БД: `spring-app/docker/mysql/init.sql`
+  - Подробно: [`spring-app/DOCKER.md`](spring-app/DOCKER.md)
 
 ### Прошлый семестр (`semester-previous`)
 
@@ -92,6 +153,12 @@ CREATE DATABASE hotel_db;
 3) Проверьте `semester-current/src/main/resources/database.properties`:
 
 - `db.url`, `db.username`, `db.password`, `db.driver`
+
+### MySQL для Spring (Лаб5–Лаб8, локальный запуск)
+
+Та же БД `hotel_db`. Настройте `spring-app/src/main/resources/application.properties` (логин/пароль как у servlet-части).
+
+При ошибке `Unknown column 'deleted'` колонка добавляется автоматически при старте (`UsersDeletedColumnMigration`) или вручную: `spring-app/src/main/resources/sql/alter-users-deleted.sql`.
 
 ### PostgreSQL (backup для Лаб1)
 
@@ -127,6 +194,14 @@ mvn -Dexec.mainClass="com.hoteldb.labs.jpa.Lab2Main" exec:java
 
 Проект собирается как **`war`**. Дальше его нужно задеплоить в сервлет-контейнер (например, Tomcat).
 
+**IntelliJ IDEA + Tomcat (кратко):**
+
+1. `mvn clean package` в корне репозитория.
+2. Run → Edit Configurations → **Tomcat Server** → Local.
+3. Deployment: артефакт `hotel-db-labs:war exploded` или WAR из `target/hotel-db-labs-1.0-SNAPSHOT.war`.
+4. Application context: `/hotel-db-labs` (или как в настройках Tomcat).
+5. Перед запуском: MySQL + `init.sql`, в `database.properties` верные `db.username` / `db.password`.
+
 1) Собрать WAR:
 
 ```bash
@@ -146,47 +221,108 @@ mvn clean package
 - `admin / admin` (роль ADMIN)
 - `user / user` (роль USER)
 
-## Запуск Лаб5 / Лаб6 (Spring Boot + REST)
+## Запуск Spring (Лаб5-9)
 
-Из каталога `spring-app/`:
+Модуль: **`spring-app/`** (отдельный `pom.xml`, не входит в корневую `mvn package` для WAR).
+
+### Лаб5–Лаб8: локально (IDEA или Maven)
+
+**IntelliJ IDEA (рекомендуется для демонстрации):**
+
+1. File → Open → каталог `spring-app/` (или весь репозиторий, тогда укажите модуль `spring-labs`).
+2. Run → Edit Configurations → **+** → **Spring Boot**.
+3. Main class: `com.hoteldb.spring.SpringLabsApplication`.
+4. Working directory: `spring-app`.
+5. Убедитесь, что MySQL запущен и применён `init.sql`.
+6. Run — в браузере: `http://localhost:8081/`.
+
+**Maven (из каталога `spring-app/`):**
 
 ```bash
 cd spring-app
 mvn spring-boot:run
 ```
 
-Браузер: `http://localhost:8081/` (логин, регистрация, welcome).
+Учётки по умолчанию: **`admin` / `admin`**, **`user` / `user`** (из `init.sql`). Если `admin` отсутствует — создаётся при старте (`AdminUserBootstrap`).
 
-Если админа ещё нет в БД, при старте создаётся **`admin` / `admin`** (см. `AdminUserBootstrap`).
+### Лаб5 (веб после входа)
 
-### REST (Лаб6), примеры
+| Роль | URL | Что показать |
+|------|-----|----------------|
+| ADMIN | `http://localhost:8081/admin` | панель администратора |
+| USER | `http://localhost:8081/welcome/user` | своя запись в `users` |
 
-Регистрация (без авторизации):
+Регистрация: `http://localhost:8081/register`.
 
-```bash
-curl -s -X POST http://localhost:8081/api/v1/register ^
-  -H "Content-Type: application/json" ^
-  -d "{\"username\":\"apiuser\",\"password\":\"secret\"}"
+### Лаб6 (REST)
+
+В PowerShell для Basic Auth удобнее **`curl.exe`**, не алиас `curl`:
+
+```powershell
+curl.exe -s -X POST http://localhost:8081/api/v1/register `
+  -H "Content-Type: application/json" `
+  -d '{\"username\":\"apiuser\",\"password\":\"secret\"}'
+
+curl.exe -s -u admin:admin http://localhost:8081/api/v1/me
+curl.exe -s -u admin:admin http://localhost:8081/api/v1/rooms
 ```
 
-Текущий пользователь (HTTP Basic):
+### Лаб7 (Spring Security — сценарий демонстрации)
+
+1. Войти как **admin** → открываются `/admin/**`; попытка открыть `/profile/edit` под admin — отказ (403).
+2. Войти как **user** → доступны `/welcome/user`, `/profile/edit`; `/admin` — 403.
+3. REST: без Basic Auth `GET /api/v1/me` → 401; с `user:user` запрос `GET /api/v1/rooms` → 403.
+
+### Лаб8 (Bootstrap + CRUD)
+
+**ADMIN** (`admin/admin`):
+
+- `http://localhost:8081/admin/rooms` — добавить номер (без id), редактировать/удалить кнопками **в строке**.
+- `http://localhost:8081/admin/users` — добавить пользователя; «Удалить» ставит `deleted=1` (в MySQL строка остаётся).
+
+**USER:**
+
+- `http://localhost:8081/welcome/user` → «Редактировать» в своей строке → смена пароля.
+
+### Лаб9 (Docker)
+
+Нужен только **Docker Desktop** (Maven/MySQL на хосте не обязательны).
 
 ```bash
-curl -s -u admin:admin http://localhost:8081/api/v1/me
+cd spring-app
+docker compose up --build
 ```
 
-Список номеров (только ADMIN):
+- Приложение: `http://localhost:8081/`
+- MySQL с хоста (опционально): `localhost:3307`, пароль root: `hotel_pass` (см. `docker-compose.yml`)
+
+**Развёртывание на другом ПК:**
 
 ```bash
-curl -s -u admin:admin http://localhost:8081/api/v1/rooms
+git clone <URL-репозитория>
+cd cp-development-technologies-2025/spring-app
+docker compose up --build -d
 ```
 
-Тесты модуля `spring-app`:
+**Порты заняты?** Скопируйте `.env.example` → `.env`, измените `APP_HOST_PORT` / `MYSQL_HOST_PORT`.
+
+**Сброс данных БД в контейнере:**
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Полная инструкция: [`spring-app/DOCKER.md`](spring-app/DOCKER.md).
+
+### Тесты `spring-app`
 
 ```bash
 cd spring-app
 mvn test
 ```
+
+Интеграционные тесты API: `ApiSecurityIT` (профиль `test`, H2 in-memory).
 
 ## Тесты и покрытие
 
@@ -210,34 +346,42 @@ HTML-отчёт:
 
 - `target/site/jacoco/index.html`
 
+---
+
 # Проект: Разработка технологий программирования
+
+> **Этот раздел — прошлый семестр** (`semester-previous/`): паттерны GoF, AspectJ, антипаттерны.  
+> Нумерация лабораторных **не совпадает** с текущим семестром (см. [сводную таблицу](#сводная-таблица-текущий-семестр) в начале README).  
+> Текущий семестр: Лаб1–4 в `semester-current/`, Лаб5–9 в `spring-app/`.
 
 ## Описание проекта
 
-Данный проект представляет собой комплексную систему для изучения различных технологий программирования на Java. Проект включает в себя работу с базами данных (JDBC, JPA), паттерны проектирования, аспектно-ориентированное программирование, логирование и обработку ошибок. Все лабораторные работы реализованы на примере системы управления гостиницей и игры "Пунические войны".
+Данный проект представляет собой комплексную систему для изучения различных технологий программирования на Java. Проект включает в себя работу с базами данных (JDBC, JPA), веб (JSP/Servlet, Spring Boot), паттерны проектирования, аспектно-ориентированное программирование, Docker и модульное тестирование. Примеры — система управления гостиницей и игра «Пунические войны».
 
 ---
 
-## Содержание
+## Содержание (прошлый семестр — паттерны и AspectJ)
 
-1. [Лабораторная работа №1: Связь с БД при помощи JDBC](#лабораторная-работа-1-связь-с-бд-при-помощи-jdbc)
-2. [Лабораторная работа №2: Связь с БД при помощи JPA](#лабораторная-работа-2-связь-с-бд-при-помощи-jpa)
-3. [Лабораторная работа №4: Порождающие паттерны проектирования](#лабораторная-работа-4-порождающие-паттерны-проектирования)
-4. [Лабораторная работа №5: Структурные паттерны проектирования](#лабораторная-работа-5-структурные-паттерны-проектирования)
+1. [Лабораторная работа №1: JDBC](#лабораторная-работа-1-связь-с-бд-при-помощи-jdbc) — также Лаб1 текущего семестра
+2. [Лабораторная работа №2: JPA](#лабораторная-работа-2-связь-с-бд-при-помощи-jpa) — также Лаб2 текущего семестра
+3. [Лабораторная работа №4: Порождающие паттерны](#лабораторная-работа-4-порождающие-паттерны-проектирования)
+4. [Лабораторная работа №5: Структурные паттерны](#лабораторная-работа-5-структурные-паттерны-проектирования)
 5. [Лабораторная работа №6: Паттерны поведения](#лабораторная-работа-6-паттерны-поведения)
 6. [Лабораторная работа №7: Hello, AspectJ](#лабораторная-работа-7-hello-aspectj)
 7. [Лабораторная работа №8: Аспектная обработка БД](#лабораторная-работа-8-аспектная-обработка-бд)
-8. [Лабораторная работа №9: Аспектно-ориентированные версии паттернов](#лабораторная-работа-9-аспектно-ориентированные-версии-паттернов)
+8. [Лабораторная работа №9: Аспектные паттерны](#лабораторная-работа-9-аспектно-ориентированные-версии-паттернов)
 9. [Лабораторная работа №10: Юнит-тестирование](#лабораторная-работа-10-юнит-тестирование)
 
 ---
 
 ## Требования
 
-- **JDK 21**
+- **JDK 17+** (сборка; рекомендуется JDK 21)
 - **Maven 3.6+**
-- **MySQL 8.0+** (для запуска основных приложений)
-- **H2 Database** (используется автоматически для тестов)
+- **MySQL 8.0+** (Лаб1–4 локально, Лаб5–8; в Лаб9 — MySQL в Docker)
+- **Tomcat 10+** (Лаб3–4, servlet WAR)
+- **Docker Desktop / Docker Compose v2** (Лаб9)
+- **H2** — автоматически для unit-тестов Spring (`spring-app`, профиль `test`)
 
 ---
 
@@ -877,27 +1021,27 @@ mvn clean test jacoco:check
 ## Общая структура проекта
 
 ```
-semester-current/
-├── src/
-│   ├── main/
-│   │   ├── java/com/hoteldb/labs/
-│   │   │   ├── jdbc/              # Лабораторная работа №1 (+ backup/failover)
-│   │   │   ├── jpa/               # JPA сущности/сервисы
-│   │   │   ├── model/             # Модели
-│   │   │   └── web/               # JSP/Servlet (Лаб3/Лаб4)
-│   │   ├── resources/
-│   │   │   ├── database.properties
-│   │   │   ├── META-INF/persistence.xml
-│   │   │   └── sql/               # init.sql, init-backup.sql
-│   │   └── webapp/                # JSP страницы
-│   └── test/
-│       ├── java/                  # Unit-тесты (JaCoCo 100% для нетривиального кода)
-│       └── resources/
-└── pom.xml
-
-semester-previous/
-├── src/main/java/                 # Паттерны, AspectJ, антипаттерны
-└── pom.xml
+cp-development-technologies-2025/
+├── pom.xml                        # WAR: semester-current + semester-previous
+├── semester-current/              # Текущий семестр: Лаб1–4
+│   └── src/main/java/com/hoteldb/labs/
+│       ├── jdbc/                  # Лаб1
+│       ├── jpa/                   # Лаб2 (+ сущности для Лаб4)
+│       └── web/                   # Лаб3–4 (Servlet, JSP)
+│   └── src/main/webapp/           # login.jsp, welcome.jsp, Bootstrap
+├── semester-previous/             # Прошлый семестр: паттерны, AspectJ
+│   └── src/main/java/             # pattern*, aspectj, antipatterns, punic
+└── spring-app/                    # Текущий семестр: Лаб5–9
+    ├── pom.xml
+    ├── Dockerfile                 # Лаб9
+    ├── docker-compose.yml
+    ├── DOCKER.md
+    └── src/main/java/com/hoteldb/spring/
+        ├── config/                # SecurityConfig (Лаб7)
+        ├── api/                   # REST (Лаб6)
+        ├── web/admin/             # CRUD (Лаб8)
+        ├── bootstrap/             # миграция deleted, admin
+        └── resources/templates/   # Thymeleaf + Bootstrap
 ```
 
 ---
@@ -924,57 +1068,63 @@ semester-previous/
 ### AOP
 - **AspectJ 1.9.22** - аспектно-ориентированное программирование
 
+### Spring (текущий семестр, `spring-app/`)
+- **Spring Boot 3.2.5**, **Spring Security 6**, **Spring Data JPA**
+- **Thymeleaf** + **Bootstrap 5** (Лаб8)
+- **MySQL Connector/J 8.3** (runtime), **H2** (тесты)
+
+### DevOps
+- **Docker**, **Docker Compose** (Лаб9)
+
 ---
 
 ## Команды для запуска
 
-### Сборка проекта
-```bash
-mvn clean compile
-```
+### Текущий семестр (кратко)
 
-### Запуск лабораторных работ
+| Лаб | Команда |
+|-----|---------|
+| 1 JDBC | `mvn -Dexec.mainClass="com.hoteldb.labs.jdbc.Lab1Main" exec:java` |
+| 2 JPA | `mvn -Dexec.mainClass="com.hoteldb.labs.jpa.Lab2Main" exec:java` |
+| 3–4 WEB | `mvn clean package` → WAR в Tomcat |
+| 5–8 Spring | `cd spring-app && mvn spring-boot:run` или Run в IDEA |
+| 9 Docker | `cd spring-app && docker compose up --build` |
 
-**Лабораторная работа №1 (JDBC):**
-```bash
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.jdbc.Lab1Main"
-```
+Подробные сценарии — в [начале README](#запуск-spring-лаб5-9).
 
-**Лабораторная работа №2 (JPA):**
-```bash
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.jpa.Lab2Main"
-```
+### Прошлый семестр (паттерны, AspectJ)
 
 **Лабораторная работа №4 (Builder):**
 ```bash
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.pattern4.creational.Lab4Main"
+mvn -Paspectj exec:java -Dexec.mainClass="com.hoteldb.labs.pattern4.creational.Lab4Main"
 ```
 
 **Лабораторная работа №5 (Bridge):**
 ```bash
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.pattern5.structural.Lab5Main"
+mvn -Paspectj exec:java -Dexec.mainClass="com.hoteldb.labs.pattern5.structural.Lab5Main"
 ```
 
 **Лабораторная работа №6 (Iterator):**
 ```bash
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.pattern6.behavioral.Lab6Main"
+mvn -Paspectj exec:java -Dexec.mainClass="com.hoteldb.labs.pattern6.behavioral.Lab6Main"
 ```
 
 **Лабораторная работа №7 (Hello, AspectJ):**
 ```bash
-mvn clean compile
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.aspectj.MainClass"
+mvn -Paspectj clean compile
+mvn -Paspectj exec:java -Dexec.mainClass="com.hoteldb.labs.aspectj.MainClass"
 ```
 
 **Лабораторная работа №9 (Аспектные паттерны):**
 ```bash
-mvn clean compile
-mvn exec:java -Dexec.mainClass="com.hoteldb.labs.pattern9.Lab9Main"
+mvn -Paspectj clean compile
+mvn -Paspectj exec:java -Dexec.mainClass="com.hoteldb.labs.pattern9.Lab9Main"
 ```
 
 ### Запуск тестов
 ```bash
-mvn test
+mvn test                    # servlet + semester-previous
+cd spring-app && mvn test   # Spring (ApiSecurityIT)
 ```
 
 ### Просмотр отчета о покрытии
@@ -986,11 +1136,10 @@ mvn jacoco:report
 
 ## Заключение
 
-Проект демонстрирует комплексное изучение современных технологий разработки на Java:
-- Работа с базами данных через JDBC и JPA
-- Применение паттернов проектирования (порождающих, структурных, поведенческих)
-- Аспектно-ориентированное программирование
-- Профессиональное логирование и обработка ошибок
-- Модульное тестирование с высоким покрытием кода
+Репозиторий объединяет два семестра:
 
-Все лабораторные работы реализованы с соблюдением лучших практик разработки и готовы для демонстрации преподавателю.
+**Текущий:** JDBC/JPA, JSP/Servlet с ролями, Spring Boot (Security, CRUD, REST), контейнеризация Docker.
+
+**Прошлый:** паттерны проектирования, AspectJ, антипаттерны, юнит-тесты с JaCoCo.
+
+Все лабораторные готовы к демонстрации; для Spring и Docker см. разделы [Запуск Spring (Лаб5-9)](#запуск-spring-лаб5-9) и [`spring-app/DOCKER.md`](spring-app/DOCKER.md).

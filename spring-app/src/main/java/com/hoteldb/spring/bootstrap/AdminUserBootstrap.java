@@ -7,9 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(1)
 public class AdminUserBootstrap implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AdminUserBootstrap.class);
@@ -29,6 +31,7 @@ public class AdminUserBootstrap implements ApplicationRunner {
         admin.setUsername("admin");
         admin.setPassword("admin");
         admin.setRole(UserRole.ADMIN);
+        admin.setDeleted(false);
         userRepository.save(admin);
         log.warn("Created default admin user: admin / admin");
     }

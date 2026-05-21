@@ -29,6 +29,10 @@ Thumbs.db
 *.log
 logs/
 
+# Docker local overrides
+.env
+spring-app/.env
+
 # Compiled class files
 *.class
 
