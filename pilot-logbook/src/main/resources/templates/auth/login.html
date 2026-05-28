@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Вход')}"></head>
+<body class="pl-app">
+<div class="pl-auth-wrap">
+    <div class="pl-auth-card">
+        <div class="text-center mb-4">
+            <i class="bi bi-airplane-fill text-primary" style="font-size: 2.5rem;"></i>
+            <h1 class="h4 mt-2 fw-bold">Лётная книжка</h1>
+            <p class="text-muted small mb-0">Вход в систему</p>
+        </div>
+        <div th:if="${param.logout}" class="alert alert-info py-2">Вы вышли из системы.</div>
+        <div th:if="${param.registered}" class="alert alert-success py-2">Регистрация успешна. Войдите под своим логином.</div>
+        <div th:if="${param.error}" class="alert alert-danger py-2">Неверный логин или пароль.</div>
+        <form th:action="@{/login}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="mb-3">
+                <label class="form-label">Логин</label>
+                <input class="form-control form-control-lg" name="username" required autocomplete="username"
+                       placeholder="Ваш логин">
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Пароль</label>
+                <input class="form-control form-control-lg" type="password" name="password" required
+                       autocomplete="current-password" placeholder="Пароль">
+            </div>
+            <button type="submit" class="btn btn-primary pl-btn-primary w-100 btn-lg">Войти</button>
+        </form>
+        <p class="text-center mt-4 mb-0 small text-muted">
+            Пилот? <a th:href="@{/register}">Зарегистрироваться</a>
+        </p>
+        <p class="text-center mt-2 mb-0 small text-muted">
+            Демо начальника: <code>chief</code> / <code>chief</code>
+        </p>
+    </div>
+</div>
+</body>
+</html>

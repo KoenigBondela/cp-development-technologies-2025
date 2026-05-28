@@ -7,6 +7,7 @@
 - **`semester-current/`** — текущий семестр: JDBC/JPA/WEB (JSP/Servlet), unit-тесты, failover/backup
 - **`semester-previous/`** — прошлый семестр: паттерны, AspectJ, антипаттерны
 - **`spring-app/`** — **Лаб5–Лаб9**: отдельное **Spring Boot** приложение (Лаб4+REST, Security, CRUD, Docker). Собирается **своим** `spring-app/pom.xml`.
+- **`pilot-logbook/`** — **курсовой проект**: веб-приложение «Электронная лётная книжка пилота» (CRUD полётов, агрегация налёта). Отдельный `pilot-logbook/pom.xml`, порт **8082**. Docker: `cd pilot-logbook && docker compose up --build`. См. [`pilot-logbook/README.md`](pilot-logbook/README.md), [`pilot-logbook/DOCKER.md`](pilot-logbook/DOCKER.md).
 
 Корневой `pom.xml` в корне репозитория — **общий** для servlet-части: он подключает исходники из `semester-current/` и `semester-previous/` и собирает один `war`. Spring-приложение в корень не включён (чтобы не смешивать два стека в одной сборке).
 

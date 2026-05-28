@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Справочники')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Справочники для выпадающих списков</h1>
+            <p class="text-muted mb-0">Самолёты и маршруты, которые пилоты выбирают при добавлении полёта</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/chief}">
+            <i class="bi bi-arrow-left"></i> К пилотам
+        </a>
+    </div>
+
+    <div th:if="${param.aircraftSaved}" class="alert alert-success py-2">Список самолётов обновлён.</div>
+    <div th:if="${param.routeSaved}" class="alert alert-success py-2">Список маршрутов обновлён.</div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card pl-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-airplane"></i> Воздушные суда</span>
+                    <span class="badge bg-primary" th:text="${#lists.size(aircraftList)}">0</span>
+                </div>
+                <div class="card-body border-bottom">
+                    <div th:if="${aircraftError}" class="alert alert-danger py-2" th:text="${aircraftError}"></div>
+                    <h2 class="h6 fw-bold mb-3"
+                        th:text="${aircraftEditId != null} ? 'Редактировать самолёт' : 'Добавить самолёт'">Добавить</h2>
+                    <form th:action="${aircraftEditId != null} ? @{/chief/catalog/aircraft/{id}(id=${aircraftEditId})} : @{/chief/catalog/aircraft}"
+                          method="post" accept-charset="UTF-8" th:object="${aircraftForm}" class="row g-2">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="col-12">
+                            <label class="form-label">Тип</label>
+                            <input class="form-control" th:field="*{typeName}" placeholder="Cessna 172" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Бортовой номер</label>
+                            <input class="form-control" th:field="*{registrationNumber}" placeholder="RA-67890" required>
+                        </div>
+                        <div class="col-12" th:if="${aircraftEditId != null}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" th:field="*{active}" id="acActive">
+                                <label class="form-check-label" for="acActive">Доступен в списке для пилотов</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-sm">Сохранить</button>
+                            <a th:if="${aircraftEditId != null}" class="btn btn-outline-secondary btn-sm"
+                               th:href="@{/chief/catalog}">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 pl-table align-middle">
+                        <thead>
+                        <tr>
+                            <th>Тип</th>
+                            <th>Борт</th>
+                            <th>Статус</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${aircraftList}">
+                            <td th:text="${a.typeName}">C172</td>
+                            <td th:text="${a.registrationNumber}">RA-67890</td>
+                            <td>
+                                <span th:if="${a.active}" class="badge text-bg-success">В списке</span>
+                                <span th:unless="${a.active}" class="badge text-bg-secondary">Скрыт</span>
+                            </td>
+                            <td class="text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/chief/catalog/aircraft/{id}/edit(id=${a.id})}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:if="${a.active}" th:action="@{/chief/catalog/aircraft/{id}/deactivate(id=${a.id})}"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Скрыть самолёт из списка?');">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card pl-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-signpost-split"></i> Маршруты</span>
+                    <span class="badge bg-primary" th:text="${#lists.size(routeList)}">0</span>
+                </div>
+                <div class="card-body border-bottom">
+                    <div th:if="${routeError}" class="alert alert-danger py-2" th:text="${routeError}"></div>
+                    <h2 class="h6 fw-bold mb-3"
+                        th:text="${routeEditId != null} ? 'Редактировать маршрут' : 'Добавить маршрут'">Добавить</h2>
+                    <form th:action="${routeEditId != null} ? @{/chief/catalog/routes/{id}(id=${routeEditId})} : @{/chief/catalog/routes}"
+                          method="post" accept-charset="UTF-8" th:object="${routeForm}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="mb-2">
+                            <label class="form-label">Название маршрута</label>
+                            <input class="form-control" th:field="*{label}"
+                                   placeholder="Москва (Внуково) — Казань" required>
+                        </div>
+                        <div class="mb-2" th:if="${routeEditId != null}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" th:field="*{active}" id="rtActive">
+                                <label class="form-check-label" for="rtActive">Доступен в списке для пилотов</label>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-sm">Сохранить</button>
+                            <a th:if="${routeEditId != null}" class="btn btn-outline-secondary btn-sm"
+                               th:href="@{/chief/catalog}">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 pl-table align-middle">
+                        <thead>
+                        <tr>
+                            <th>Маршрут</th>
+                            <th>Статус</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${routeList}">
+                            <td th:text="${r.label}">Маршрут</td>
+                            <td>
+                                <span th:if="${r.active}" class="badge text-bg-success">В списке</span>
+                                <span th:unless="${r.active}" class="badge text-bg-secondary">Скрыт</span>
+                            </td>
+                            <td class="text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/chief/catalog/routes/{id}/edit(id=${r.id})}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:if="${r.active}" th:action="@{/chief/catalog/routes/{id}/deactivate(id=${r.id})}"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Скрыть маршрут из списка?');">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

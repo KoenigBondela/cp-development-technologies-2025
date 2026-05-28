@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head(${pilot.fullName})}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container pb-5">
+    <a class="btn btn-outline-secondary btn-sm mb-3" th:href="@{/chief}">
+        <i class="bi bi-arrow-left"></i> Все пилоты
+    </a>
+
+    <div th:if="${param.passwordChanged}" class="alert alert-success">Пароль пилота обновлён.</div>
+
+    <div class="pl-hero mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h1 th:text="${pilot.fullName}">Иванов И.И.</h1>
+                <p class="lead mb-0">
+                    Логин: <span th:text="${pilot.username}">pilot</span>
+                    <span th:if="${pilot.licenseNumber != null}">
+                        · Удостоверение: <span th:text="${pilot.licenseNumber}">—</span>
+                    </span>
+                </p>
+            </div>
+            <div class="col-md-4">
+                <div class="pl-stat">
+                    <div class="value" th:text="${totalHours} + ' ч'">0 ч</div>
+                    <div class="label">Общий налёт</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4" th:if="${pilot.phone != null}">
+            <div class="card pl-card"><div class="card-body small">
+                <strong>Телефон</strong><br><span th:text="${pilot.phone}">—</span>
+            </div></div>
+        </div>
+        <div class="col-md-4" th:if="${pilot.email != null}">
+            <div class="card pl-card"><div class="card-body small">
+                <strong>E-mail</strong><br><span th:text="${pilot.email}">—</span>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card pl-card"><div class="card-body small">
+                <strong>Статус</strong><br>
+                <span th:if="${pilot.active}" class="text-success">Активен</span>
+                <span th:unless="${pilot.active}" class="text-danger">Заблокирован</span>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary pl-btn-primary" th:href="@{/chief/pilots/{id}/flights(id=${pilot.id})}">
+            <i class="bi bi-journal-text"></i> Журнал полётов
+        </a>
+        <a class="btn btn-outline-primary" th:href="@{/chief/pilots/{id}/statistics(id=${pilot.id})}">
+            <i class="bi bi-bar-chart"></i> Статистика
+        </a>
+        <a class="btn btn-outline-secondary" th:href="@{/chief/pilots/{id}/edit(id=${pilot.id})}">
+            <i class="bi bi-pencil"></i> Редактировать данные
+        </a>
+    </div>
+</div>
+</body>
+</html>

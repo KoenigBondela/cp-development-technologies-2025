@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Статистика налёта')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container col-lg-9 pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Статистика налёта</h1>
+            <p class="text-muted mb-0" th:if="${pilot != null}" th:text="${pilot.fullName}">Пилот</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm"
+           th:href="${backUrl != null} ? ${backUrl} : @{/flights}">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+    </div>
+
+    <div th:if="${statsError}" class="alert alert-danger" th:text="${statsError}"></div>
+
+    <div class="card pl-card mb-4">
+        <div class="card-header">Выберите период</div>
+        <div class="card-body">
+            <form th:action="${backUrl != null} ? ${backUrl} + '/statistics' : @{/statistics}" method="get"
+                  class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">С даты</label>
+                    <input class="form-control" type="date" name="from" th:value="${from}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">По дату</label>
+                    <input class="form-control" type="date" name="to" th:value="${to}" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary pl-btn-primary w-100">Показать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4" th:if="${totalHours != null}">
+        <div class="col-md-5">
+            <div class="card pl-card h-100">
+                <div class="card-body text-center py-4">
+                    <p class="text-muted mb-1">Общий налёт за период</p>
+                    <p class="display-5 fw-bold text-primary mb-0" th:text="${totalHours} + ' ч'">0 ч</p>
+                    <p class="small text-muted mt-2"
+                       th:text="'с ' + ${#temporals.format(from, 'dd.MM.yyyy')} + ' по ' + ${#temporals.format(to, 'dd.MM.yyyy')}"></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card pl-card h-100">
+                <div class="card-header">По типам самолётов</div>
+                <table class="table mb-0 pl-table">
+                    <thead>
+                    <tr><th>Тип ВС</th><th class="text-end">Налёт</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${byAircraftType}">
+                        <td th:text="${row.aircraftType()}">Cessna 172</td>
+                        <td class="text-end fw-semibold" th:text="${row.flightHours()} + ' ч'">10 ч</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(byAircraftType)}">
+                        <td colspan="2" class="text-center text-muted py-4">За этот период полётов нет</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

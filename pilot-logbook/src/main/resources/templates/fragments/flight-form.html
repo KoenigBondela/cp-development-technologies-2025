@@ -1,0 +1,51 @@
+<th:block th:fragment="fields">
+    <div class="row g-3">
+        <div class="col-md-4 col-lg-3">
+            <label class="form-label" for="flightDate">Дата полёта</label>
+            <input class="form-control" type="date" id="flightDate" th:field="*{flightDate}" required>
+        </div>
+        <div class="col-md-8 col-lg-5">
+            <label class="form-label" for="aircraftId">Воздушное судно</label>
+            <select class="form-select" id="aircraftId" th:field="*{aircraftId}" required>
+                <option value="">— Выберите самолёт —</option>
+                <option th:each="a : ${aircraftList}"
+                        th:value="${a.id}"
+                        th:text="${a.displayLabel()}">Cessna 172 · RA-67890</option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-4">
+            <label class="form-label" for="routeId">Маршрут</label>
+            <select class="form-select" id="routeId" th:field="*{routeId}" required>
+                <option value="">— Выберите маршрут —</option>
+                <option th:each="r : ${routeList}"
+                        th:value="${r.id}"
+                        th:text="${r.label}">Москва — Казань</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="takeoffTime">Время взлёта</label>
+            <input class="form-control" type="time" id="takeoffTime" th:field="*{takeoffTime}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="landingTime">Время посадки</label>
+            <input class="form-control" type="time" id="landingTime" th:field="*{landingTime}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Налёт (рассчитывается)</label>
+            <div class="pl-hours-preview" id="hoursPreview">—</div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="dayNight">Время суток</label>
+            <select class="form-select" id="dayNight" th:field="*{dayNight}" required>
+                <option th:each="opt : ${dayNightOptions}"
+                        th:value="${opt}"
+                        th:text="${opt.label}">Днём</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="notes">Заметки</label>
+            <textarea class="form-control" id="notes" rows="2" th:field="*{notes}"
+                      placeholder="Например: учебный полёт, инструктор…"></textarea>
+        </div>
+    </div>
+</th:block>

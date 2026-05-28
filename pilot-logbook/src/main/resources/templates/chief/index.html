@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Панель начальника')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container pb-5">
+    <div class="pl-hero mb-4">
+        <h1>Панель начальника авиакомпании</h1>
+        <p class="lead">Просмотр пилотов, их налёта и лётных записей</p>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="h5 fw-bold mb-0">Пилоты</h2>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/chief/catalog}">
+                <i class="bi bi-list-ul"></i> Самолёты и маршруты
+            </a>
+            <a class="btn btn-primary pl-btn-primary btn-sm" th:href="@{/chief/pilots/new}">
+                <i class="bi bi-person-plus"></i> Добавить пилота
+            </a>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-4" th:each="p : ${pilots}">
+            <div class="card pl-card pl-pilot-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h3 class="h6 fw-bold mb-0" th:text="${p.fullName()}">Иванов</h3>
+                        <span class="badge badge-pl-hours" th:text="${p.totalFlightHours()} + ' ч'">0 ч</span>
+                    </div>
+                    <p class="small text-muted mb-1">Логин: <span th:text="${p.username()}">pilot</span></p>
+                    <p class="small text-muted mb-3" th:if="${p.licenseNumber() != null}"
+                       th:text="'Удостоверение: ' + ${p.licenseNumber()}">—</p>
+                    <span th:if="${!p.active()}" class="badge bg-secondary mb-2">Неактивен</span>
+                    <a class="btn btn-sm btn-outline-primary w-100"
+                       th:href="@{/chief/pilots/{id}(id=${p.id()})}">
+                        Открыть карточку
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-12" th:if="${#lists.isEmpty(pilots)}">
+            <div class="alert alert-info">Пилоты ещё не зарегистрированы. Добавьте первого пилота.</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

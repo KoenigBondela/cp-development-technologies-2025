@@ -1,0 +1,44 @@
+# Pilot Logbook: Spring Boot + MySQL. Запуск: docker compose up --build
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pilot-logbook-mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-pilot_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pilot_logbook}
+      LANG: C.UTF-8
+    ports:
+      - "${MYSQL_HOST_PORT:-3308}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: pilot-logbook-app
+    ports:
+      - "${APP_HOST_PORT:-8082}:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pilot_logbook}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-pilot_pass}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure:3
+
+volumes:
+  mysql_data:

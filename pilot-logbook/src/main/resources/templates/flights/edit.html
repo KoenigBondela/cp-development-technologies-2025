@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Редактирование полёта')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container col-lg-8 pb-5">
+    <h1 class="h4 fw-bold mb-3">Редактирование полёта</h1>
+    <div th:if="${formError}" class="alert alert-danger" th:text="${formError}"></div>
+    <div class="card pl-card">
+        <div class="card-body">
+            <form th:action="${chiefView} ? @{/chief/pilots/{pid}/flights/{id}(pid=${pilot.id},id=${flightId})} : @{/flights/{id}(id=${flightId})}"
+                  method="post" accept-charset="UTF-8" th:object="${flightForm}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div th:replace="~{fragments/flight-form :: fields}"></div>
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary pl-btn-primary">Сохранить</button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="${chiefView} ? @{/chief/pilots/{pid}/flights(pid=${pilot.id})} : @{/flights}">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

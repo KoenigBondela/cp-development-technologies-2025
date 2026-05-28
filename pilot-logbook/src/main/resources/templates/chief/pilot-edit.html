@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Данные пилота')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container col-lg-8 pb-5">
+    <h1 class="h4 fw-bold mb-3" th:text="${creating} ? 'Новый пилот' : 'Редактирование: ' + ${pilot.fullName}">Пилот</h1>
+    <div th:if="${param.passwordError}" class="alert alert-danger">Не удалось сменить пароль. Проверьте совпадение и длину (от 4 символов).</div>
+
+    <div class="card pl-card mb-4">
+        <div class="card-body">
+            <form th:action="${creating} ? @{/chief/pilots/new} : @{/chief/pilots/{id}(id=${pilot.id})}"
+                  method="post" th:object="${profileForm}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">ФИО</label>
+                        <input class="form-control" th:field="*{fullName}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Логин</label>
+                        <input class="form-control" th:field="*{username}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Номер удостоверения</label>
+                        <input class="form-control" th:field="*{licenseNumber}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Телефон</label>
+                        <input class="form-control" th:field="*{phone}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">E-mail</label>
+                        <input class="form-control" type="email" th:field="*{email}">
+                    </div>
+                    <div class="col-md-6" th:if="${!creating}">
+                        <label class="form-label">Активен</label>
+                        <select class="form-select" th:field="*{active}">
+                            <option th:value="true">Да</option>
+                            <option th:value="false">Нет (заблокировать)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" th:if="${creating}">
+                        <label class="form-label">Пароль</label>
+                        <input class="form-control" type="password" name="password" required minlength="4">
+                    </div>
+                    <div class="col-md-6" th:if="${creating}">
+                        <label class="form-label">Повтор пароля</label>
+                        <input class="form-control" type="password" name="passwordConfirm" required>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary pl-btn-primary">Сохранить</button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="${creating} ? @{/chief} : @{/chief/pilots/{id}(id=${pilot.id})}">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card pl-card" th:if="${!creating}">
+        <div class="card-header">Сброс пароля пилота</div>
+        <div class="card-body">
+            <form th:action="@{/chief/pilots/{id}/password(id=${pilot.id})}" method="post" class="row g-3">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="col-md-6">
+                    <label class="form-label">Новый пароль</label>
+                    <input class="form-control" type="password" name="newPassword" required minlength="4">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Повторите</label>
+                    <input class="form-control" type="password" name="newPasswordConfirm" required>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-outline-warning">Установить новый пароль</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

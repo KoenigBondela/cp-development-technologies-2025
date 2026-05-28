@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head th:replace="~{fragments/layout :: head('Мои полёты')}"></head>
+<body class="pl-app">
+<div th:replace="~{fragments/layout :: nav}"></div>
+<div class="container pb-5">
+    <div class="pl-hero">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h1 th:if="${chiefView == null}">Здравствуйте, <span th:text="${pilot.fullName}">Пилот</span>!</h1>
+                <h1 th:if="${chiefView}">Полёты: <span th:text="${pilot.fullName}">Пилот</span></h1>
+                <p class="lead">Ваша лётная книжка — все записи о полётах в одном месте</p>
+            </div>
+            <div class="col-md-4">
+                <div class="pl-stat">
+                    <div class="value" th:text="${totalHours} + ' ч'">0 ч</div>
+                    <div class="label">Общий налёт</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a th:if="${chiefView}"
+           class="btn btn-outline-secondary btn-sm"
+           th:href="@{/chief/pilots/{id}(id=${pilot.id})}">
+            <i class="bi bi-arrow-left"></i> К карточке пилота
+        </a>
+        <a th:if="${chiefView == null}" class="btn btn-outline-primary btn-sm" th:href="@{/statistics}">
+            <i class="bi bi-bar-chart"></i> Статистика за период
+        </a>
+        <a th:if="${chiefView}"
+           class="btn btn-outline-primary btn-sm"
+           th:href="@{/chief/pilots/{id}/statistics(id=${pilot.id})}">
+            <i class="bi bi-bar-chart"></i> Статистика пилота
+        </a>
+    </div>
+
+    <div th:if="${formError}" class="alert alert-danger" th:text="${formError}"></div>
+
+    <div class="card pl-card mb-4">
+        <div class="card-header"><i class="bi bi-plus-circle"></i> Добавить полёт</div>
+        <div class="card-body">
+            <form th:action="${chiefView} ? @{/chief/pilots/{pid}/flights(pid=${pilot.id})} : @{/flights}"
+                  method="post" accept-charset="UTF-8" th:object="${flightForm}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div th:replace="~{fragments/flight-form :: fields}"></div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success pl-btn-primary">
+                        <i class="bi bi-check-lg"></i> Сохранить полёт
+                    </button>
+                    <span class="text-muted small ms-2">Налёт считается по времени взлёта и посадки</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card pl-card">
+        <div class="card-header">Журнал полётов</div>
+        <div class="table-responsive">
+            <table class="table table-hover pl-table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Самолёт</th>
+                    <th>Маршрут</th>
+                    <th>Взлёт</th>
+                    <th>Посадка</th>
+                    <th>Налёт</th>
+                    <th>Условия</th>
+                    <th>Заметки</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="f : ${flights}">
+                    <td th:text="${#temporals.format(f.flightDate, 'dd.MM.yyyy')}">01.01.2025</td>
+                    <td>
+                        <span th:text="${f.aircraftType}">C172</span><br>
+                        <small class="text-muted" th:text="${f.registrationNumber}">RA-67890</small>
+                    </td>
+                    <td th:text="${f.route}">Маршрут</td>
+                    <td th:text="${#temporals.format(f.takeoffTime, 'HH:mm')}">10:00</td>
+                    <td th:text="${#temporals.format(f.landingTime, 'HH:mm')}">11:30</td>
+                    <td><span class="badge badge-pl-hours" th:text="${f.flightHours} + ' ч'">1.5 ч</span></td>
+                    <td th:text="${f.dayNight.label}">Днём</td>
+                    <td class="small text-muted" th:text="${f.notes != null ? f.notes : '—'}">—</td>
+                    <td class="text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary"
+                           th:href="${chiefView} ? @{/chief/pilots/{pid}/flights/{id}/edit(pid=${pilot.id},id=${f.id})} : @{/flights/{id}/edit(id=${f.id})}">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="${chiefView} ? @{/chief/pilots/{pid}/flights/{id}/delete(pid=${pilot.id},id=${f.id})} : @{/flights/{id}/delete(id=${f.id})}"
+                              method="post" class="d-inline">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Удалить запись о полёте?');">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(flights)}">
+                    <td colspan="9" class="text-center text-muted py-5">
+                        <i class="bi bi-cloud display-6 d-block mb-2"></i>
+                        Записей пока нет — добавьте первый полёт выше
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
